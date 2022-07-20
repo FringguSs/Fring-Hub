@@ -1,0 +1,216 @@
+local Material = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/MaterialLua/master/Module.lua"))()
+local lp = game.Players.LocalPlayer
+local X = Material.Load({
+    Title = "Fring Hub | Reaper 2",
+    Style = 3,
+    SizeX = 300,
+    SizeY = 350,
+    Theme = "Light",
+    ColorOverrides = {
+        TitleBar = Color3.fromRGB(48,25,52),
+        MainFrame = Color3.fromRGB(0,0,0),
+        Toggle = Color3.fromRGB(124,37,255),
+        ToggleAccent = Color3.fromRGB(255,255,255), 
+        Dropdown = Color3.fromRGB(0, 0, 0),
+		DropdownAccent = Color3.fromRGB(166, 209, 230),
+        Slider = Color3.fromRGB(0, 0, 0),
+		SliderAccent = Color3.fromRGB(255,255,255),
+        Button = Color3.fromRGB(48,25,52),
+        NavBarAccent = Color3.fromRGB(255, 255, 255),
+        Content = Color3.fromRGB(0,0,0),
+        Overlay = Color3.fromRGB(48,25,52),
+        DataTable = Color3.fromRGB(48,25,52),
+    }
+})
+
+
+local Mob = {}
+
+for i,v in pairs(game:GetService("Workspace").Living:GetChildren()) do
+    if v:IsA"Model" and v.Parent.Name == "Living" then
+        if not table.find(Mob,tostring(v)) then
+            table.insert(Mob,tostring(v))
+        end
+    end
+end
+
+local Npc = {}
+
+for i,v in pairs(game:GetService("Workspace").NPCs:GetChildren()) do
+    if v.Parent.Name == "NPCs" then
+        if not table.find(Npc,tostring(v)) then
+            table.insert(Npc,tostring(v))
+        end
+    end
+end
+
+local Main = X.New({
+    Title = "Main"
+})
+local Cred = X.New({
+    Title = "Credits"
+})
+    Cred.Button({
+    Text = "Discord Server",
+    Callback = function()
+        setclipboard("https://discord.gg/gbcsFdftFc")
+        toclipboard("https://discord.gg/gbcsFdftFc")
+    end,
+})
+
+    local d = Main.Dropdown({
+    Text = "Select Mob",
+    Callback = function(Value)
+        getgenv().mob = Value
+    end,
+    Options = 
+        Mob
+})
+    Main.TextField({
+    Text = "Distance Here For Farm",
+    Callback = function(Value)
+        getgenv().dis = Value
+    end
+})
+
+    Main.Slider({
+    Text = "Distance Slider",
+    Callback = function(Value)
+        getgenv().dis = Value
+    end,
+    Min = 5,
+    Max = 50,
+    Def = 5
+})
+
+local function getNPC()
+    local dist, thing = math.huge
+    for i,v in pairs(game:GetService("Workspace").Living:GetChildren()) do
+        if v:IsA("Model") and v.Name == mob then
+            local mag = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).magnitude
+            if mag < dist then 
+                dist = mag 
+                thing = v 
+            end
+        end
+    end
+    return thing
+end
+
+
+    Main.Toggle({
+    Text = "Auto Farm Mob",
+    Callback = function(a)
+        a1 = a
+        while a1 do task.wait()   
+            pcall(function()  
+
+                lp.Character.HumanoidRootPart.CFrame = CFrame.new(getNPC().HumanoidRootPart.Position + Vector3.new(0,tonumber(dis),0),getNPC().HumanoidRootPart.Position) 
+
+                local args = {
+                    [1] = {
+                        ["inputType"] = Enum.UserInputType.MouseButton1,
+                        ["keyCode"] = Enum.KeyCode.Unknown
+                    }
+                }
+
+                game:GetService("ReplicatedStorage").Remotes.Input:FireServer(unpack(args))
+                if lp.Status.Weapon.Value == nil then
+                    local args = {
+                        [1] = {
+                            ["inputType"] = Enum.UserInputType.Keyboard,
+                            ["keyCode"] = Enum.KeyCode.E
+                        }
+                    }
+    
+                    game:GetService("ReplicatedStorage").Remotes.Input:FireServer(unpack(args))
+                elseif getNPC().Status.Blocking.Value == true then
+                    local args = {
+                        [1] = {
+                            ["inputType"] = Enum.UserInputType.Keyboard,
+                            ["keyCode"] = Enum.KeyCode.R
+                        }
+                    }
+
+                    game:GetService("ReplicatedStorage").Remotes.Input:FireServer(unpack(args))
+
+                end
+            end) 
+        end
+    end,
+    Enabled = false
+})
+
+Main.Button({Text = "Refresh Enemies", Callback = function()
+    table.clear(Mob)
+    for i,v in pairs(game:GetService("Workspace").Living:GetChildren()) do
+        if v:IsA"Model" and v.Parent.Name == "Living" then
+            if not table.find(Mob,tostring(v)) then
+                table.insert(Mob,tostring(v))
+                    d:SetOptions(Mob)
+            end
+        end
+    end
+end,
+})
+
+local p = Main.Dropdown({
+    Text = "Select NPC",
+    Callback = function(Value)
+        getgenv().npc = Value
+    end,
+    Options = 
+        Npc
+})
+
+Main.Button({Text = "Teleport", Callback = function()
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.workspace.NPCs[npc].HumanoidRootPart.CFrame
+end,
+})
+
+    Main.Dropdown({
+    Text = "Quests",
+    Callback = function(Value)
+        getgenv().quest = Value
+    end,
+    Options = {
+        "Acquired Taste",
+        "Op Killer",
+        "Hueco Mundo Hunt",
+    }
+})
+
+Main.Toggle({
+    Text = "Auto Take Quest",
+    Callback = function(a)
+        a2 = a
+        while a2 do task.wait()   
+            pcall(function()  
+                if quest == "Acquired Taste" then
+                    local args = {
+                        [1] = "Acquired Taste",
+                        [2] = workspace.NPCs.FireFlare96
+                    }
+
+                    game:GetService("ReplicatedStorage").Remotes.TakeQuest:FireServer(unpack(args))
+                elseif quest == "Op Killer" then
+                        local args = {
+                            [1] = "Op Killer",
+                            [2] = workspace.NPCs.Infernasu
+                        }
+    
+                        game:GetService("ReplicatedStorage").Remotes.TakeQuest:FireServer(unpack(args))
+                    elseif quest == "Hueco Mundo Hunt" then
+                        local args = {
+                            [1] = "Hueco Mundo Hunt",
+                            [2] = workspace.NPCs.CelestialMystical
+                        }
+    
+                        game:GetService("ReplicatedStorage").Remotes.TakeQuest:FireServer(unpack(args))
+                    
+                end
+            end) 
+        end
+    end,
+    Enabled = false
+})
